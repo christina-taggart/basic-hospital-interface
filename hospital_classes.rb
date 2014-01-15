@@ -1,7 +1,7 @@
 #-----HOSPITAL CLASS-----
 
 class Hospital
-  attr_reader :name
+  attr_reader :name, :employees, :patients
 
   def initialize(name)
     @name = name
@@ -29,6 +29,10 @@ class Hospital
     @patients.each { |id, patient| patient.print_record }
   end
 
+  def get_patient_password(id)
+    @patients[id].password
+  end
+
   def add_employee(employee)
     @employees[employee.id] = employee
   end
@@ -49,6 +53,10 @@ class Hospital
     @employees.each { |id, employee| employee.print_record }
   end
 
+  def get_employee_password(id)
+    @employee[id].password
+  end
+
   private
 
   def has_patient?(id)
@@ -63,7 +71,7 @@ end
 #-----PATIENTS CLASS-----
 
 class Patient
-  attr_reader :id, :access_level
+  attr_reader :id, :access_level, :password
 
   def initialize(id, name, password, symptoms)
     @id = id
@@ -83,7 +91,7 @@ end
 #-----EMPLOYEES CLASSES-----
 
 class Employee
-  attr_reader :id, :access_level
+  attr_reader :id, :access_level, :password
 
   def initialize(id, name, password)
     @id = id
@@ -113,7 +121,7 @@ class Doctor < Employee
 end
 
 
-#-----DRIVERS-----
+#-----EXAMPLE HOSPITAL-----
 mike = Patient.new(1, "Mike Jones", "password", ["sore throat", "dizzinees"])
 sarah = Patient.new(2, "Sarah Smith", "password", ["double vision", "nausea"])
 peter = Patient.new(3, "Peter Piper", "password", ["cataracts", "stuffy nose"])
@@ -128,6 +136,9 @@ mercy_hospital.add_patient(peter)
 mercy_hospital.add_employee(john)
 mercy_hospital.add_employee(amy)
 mercy_hospital.add_employee(joe)
+
+
+#-----DRIVERS
 
 # mercy_hospital.get_all_patient_records
 # mercy_hospital.get_all_employee_records

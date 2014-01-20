@@ -3,13 +3,14 @@ require 'pry'
 
 class Hospital
 	attr_reader :auth_system
+
 	def initialize(name, location)
 		@name = name
 		@location = location
 		@employees = []
 		@patients = {}
 		@generated_id = 0
-		@auth_system = AuthSystem.new
+		@auth_system = AuthSystem.new(name)
 	end
 
 	def create_id
@@ -56,12 +57,13 @@ class Hospital
 end
 
 class AuthSystem
-	def initialize
+	def initialize(hospital_name)
 		@user_database = {}
+		@hospital_name = hospital_name
 	end
 
 	def start_authentication_system
-		puts "Welcome to #{@name}"
+		puts "Welcome to #{@hospital_name}"
 		puts "-" * 20
 		username, password = login_prompt
 		puts "-" * 20
@@ -272,7 +274,8 @@ p cheryl.username
 p cheryl.password
 p phyllis.username
 p phyllis.password
-p miranda
+puts miranda
+puts "****************************************\n\n"
 
 mercy.auth_system.start_authentication_system
 

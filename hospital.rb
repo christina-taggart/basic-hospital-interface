@@ -143,8 +143,7 @@ class AuthSystem
 		treatment = gets.chomp
 		puts "Doctor's username:"
 		doctor_username = gets.chomp
-		doctor = @user_database[doctor_username]
-		@current_user.check_in_patient(Patient.new(name), diagnosis, treatment, doctor)
+		@current_user.check_in_patient(Patient.new(name), diagnosis, treatment, doctor_username)
 	end
 
 	def remove_patient(patient_username)
@@ -251,7 +250,7 @@ class Patient < Person
 	end
 
 	def to_s
-		"Name: #{name}, Doctor: #{doctor_username}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
+		"Name: #{name}, Username: #{username}, Doctor: #{doctor_username}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
 	end
 end
 

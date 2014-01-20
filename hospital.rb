@@ -232,10 +232,10 @@ class Receptionist < Employee
 		puts "Welcome to the hospital, #{name}!"
 	end
 
-	def check_in_patient(patient, diagnosis, treatment, doctor)
+	def check_in_patient(patient, diagnosis, treatment, doctor_username)
 		patient.diagnosis = diagnosis
 		patient.treatment = treatment
-		patient.doctor = doctor
+		patient.doctor_username = doctor_username
 		@hospital.check_in_patient(patient)
 	end
 
@@ -245,13 +245,13 @@ class Receptionist < Employee
 end
 
 class Patient < Person
-	attr_accessor :diagnosis, :treatment, :doctor, :id
+	attr_accessor :diagnosis, :treatment, :doctor_username, :id
 	def initialize(name)
 		super(name, "PATIENT")
 	end
 
 	def to_s
-		"Name: #{name}, Doctor: #{doctor.name}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
+		"Name: #{name}, Doctor: #{doctor_username}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
 	end
 end
 
@@ -268,7 +268,7 @@ mercy.hire(miranda, phyllis, ezekiel)
 
 cheryl = Patient.new("Cheryl")
 phyllis.greet(cheryl.name)
-phyllis.check_in_patient(cheryl, "Broken Leg", "Cast", miranda)
+phyllis.check_in_patient(cheryl, "Broken Leg", "Cast", miranda.username)
 
 p cheryl.username
 p cheryl.password

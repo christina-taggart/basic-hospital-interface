@@ -19,13 +19,11 @@ class Hospital
 
 	def check_in_patient(patient)
 		patient.id = create_id
-		patient.doctor.add_patient(patient)
 		create_username_and_password(patient)
 		@patients[patient.id] = patient
 	end
 
 	def check_out_patient(patient)
-		patient.doctor.remove_patient(patient)
 		@patients.delete(patient.id)
 		@auth_system.delete(patient)
 	end
@@ -90,14 +88,16 @@ class AuthSystem
 			puts "Invalid access level."
 			return
 		end
+		puts
 		puts "What would you like to do?"
 		puts "Options: "
-		puts "l - list_patients"
 		puts "v - view_patient <username>"
 
 		if access_level == "ADMIN"
+			puts "l - list_patients"
 			puts "a - add_patient"
 			puts "r - remove_patient <username>"
+			print "> "
 		end
 	end
 
@@ -132,13 +132,9 @@ class AuthSystem
 	end
 
 	def list_patients
-		if @current_user.access_level == "RECEPTIONIST" || @current_user.access_level == "ADMIN"
-			patients = @current_user.doctor.patients
-		elsif @current_user.access_level == "DOCTOR"
-			patients = @current_user.patients
-		end
+		return unless @current_user.access_level == "ADMIN"
 
-		puts patients.values.map {|patient| "#{patient.name}, #{patient.username}" }
+		puts @user_database.values.select { |user| user.class == Patient }
 	end
 
 	def view_patient(patient_username)
@@ -201,17 +197,9 @@ class Doctor < Employee
 	attr_reader :patients
 
 	def initialize(name, salary)
-		@patients = {}
 		super(name, "Doctor", salary)
 	end
 
-	def remove_patient(patient)
-		@patients.delete(patient.id)
-	end
-
-	def add_patient(patient)
-		@patients[patient.id] = patient
-	end
 end
 
 class Janitor < Employee
@@ -251,7 +239,7 @@ class Patient < Person
 	end
 
 	def to_s
-		"Doctor: #{doctor.name}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
+		"Name: #{name}, Doctor: #{doctor.name}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
 	end
 end
 

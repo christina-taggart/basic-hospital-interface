@@ -7,8 +7,6 @@ class Hospital
 	def initialize(name, location)
 		@name = name
 		@location = location
-		@employees = []
-		@patients = {}
 		@generated_id = 0
 		@auth_system = AuthSystem.new(name)
 	end
@@ -20,11 +18,9 @@ class Hospital
 	def check_in_patient(patient)
 		patient.id = create_id
 		@auth_system.create_username_and_password(patient)
-		@patients[patient.id] = patient
 	end
 
 	def check_out_patient(patient)
-		@patients.delete(patient.id)
 		@auth_system.delete(patient)
 	end
 
@@ -32,14 +28,21 @@ class Hospital
 		new_employees.each do |employee|
 			@auth_system.create_username_and_password(employee)
 			employee.hospital = self
-			@employees << employee
 		end
+	end
+
+	def employees
+		@auth_system.employees
+	end
+
+	def patients
+		@auth_system.patients
 	end
 
 	def to_s
 		"#{@name}, #{@location}, \n" +
-		"Employees: #{@employees.count}\n" +
-		"Patients: #{@patients.count} \n"
+		"Employees: #{employees.count}\n" +
+		"Patients: #{patients.count} \n"
 	end
 
 end
@@ -124,7 +127,7 @@ class AuthSystem
 	def list_patients
 		return unless @current_user.access_level == "ADMIN"
 
-		puts @user_database.values.select { |user| user.class == Patient }
+		puts patients
 	end
 
 	def view_patient(patient_username)
@@ -165,6 +168,14 @@ class AuthSystem
 	def create_admin(employee)
 		employee.access_level = "ADMIN"
 	end
+
+	def employees
+		@user_database.values.select { |user| user.class == Employee }
+	end
+
+	def patients
+		@user_database.values.select { |user| user.class == Patient }
+	end
 end
 
 
@@ -180,6 +191,7 @@ end
 class Employee < Person
 	attr_reader :job_title, :salary
 	attr_accessor :hospital
+
 	def initialize(name, job_title, salary)
 		super(name, job_title)
 		@job_title = job_title

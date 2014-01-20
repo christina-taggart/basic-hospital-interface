@@ -1,4 +1,5 @@
 require 'securerandom'
+require 'pry'
 
 class Hospital
 	attr_reader :auth_system
@@ -6,13 +7,26 @@ class Hospital
 		@name = name
 		@location = location
 		@employees = []
-		@patients = []
+		@patients = {}
+		@generated_id = 0
 		@auth_system = AuthSystem.new
 	end
 
-	def admit_patient(patient)
+	def create_id
+		@generated_id += 1
+	end
+
+	def check_in_patient(patient)
+		patient.id = create_id
+		patient.doctor.add_patient(patient)
 		create_username_and_password(patient)
-		@patients << patient
+		@patients[patient.id] = patient
+	end
+
+	def check_out_patient(patient)
+		patient.doctor.remove_patient(patient)
+		@patients.delete(patient.id)
+		@auth_system.delete(patient)
 	end
 
 	def hire(*new_employees)
@@ -26,8 +40,6 @@ class Hospital
 	def create_username_and_password(person)
 		person.username = person.name + SecureRandom.hex(2)
 		person.password = SecureRandom.hex(4)
-		# person.username = "a"
-		# person.password = "a"
 		@auth_system.add(person)
 	end
 
@@ -57,28 +69,16 @@ class AuthSystem
 			"Invalid Login ID. "
 			username, password = login_prompt
 		end
-		user = @user_database[username]
-		puts "Welcome, #{username}. Your access level is: #{user.access_level}"
+		@current_user = @user_database[username]
+		puts "Welcome, #{username}. Your access level is: #{@current_user.access_level}"
 
-		if user.access_level == "PATIENT"
-			puts user
+		if @current_user.access_level == "PATIENT"
+			puts @current_user
 		else
-			display_options(user.access_level)
-			process_user_choice(gets.chomp, user)
-		end
-	end
-
-	def process_user_choice(input, user)
-		if choice == "l"
-			list_patients(user)
-		elsif choice == "v"
-			view_records(user)
-		elsif choice == "a"
-			add_record(user)
-		elsif choice == "r"
-			remove_record(user)
-		else
-			puts "Invalid Entry."
+			while true
+				display_options(@current_user.access_level)
+				process_user_choice(gets.chomp)
+			end
 		end
 	end
 
@@ -88,15 +88,29 @@ class AuthSystem
 			puts "Invalid access level."
 			return
 		end
-
 		puts "What would you like to do?"
 		puts "Options: "
 		puts "l - list_patients"
-		puts "v - view_records"
+		puts "v - view_patient <username>"
 
 		if access_level == "ADMIN"
-			puts "a - add_record"
-			puts "r - remove_record"
+			puts "a - add_patient"
+			puts "r - remove_patient <username>"
+		end
+	end
+
+	def process_user_choice(input)
+		choice, patient_username = input.split
+		if choice == "l"
+			list_patients
+		elsif choice == "v"
+			view_patient(patient_username)
+		elsif choice == "a"
+			add_patient
+		elsif choice == "r"
+			remove_patient(patient_username)
+		else
+			puts "Invalid Entry."
 		end
 	end
 
@@ -115,18 +129,39 @@ class AuthSystem
 		[username, password]
 	end
 
-	def list_patients(user)
-		if user.access_level == "RECEPTIONIST"
-			patients = user.doctor.patients
-		elsif user.access_level == "DOCTOR"
-			patients = user.patients
+	def list_patients
+		if @current_user.access_level == "RECEPTIONIST" || @current_user.access_level == "ADMIN"
+			patients = @current_user.doctor.patients
+		elsif @current_user.access_level == "DOCTOR"
+			patients = @current_user.patients
 		end
 
-		puts patients.map {|patient| patient.name }
+		puts patients.values.map {|patient| "#{patient.name}, #{patient.username}" }
 	end
 
-	def view_records(user)
+	def view_patient(patient_username)
+		puts @user_database[patient_username]
+	end
 
+	def add_patient
+		puts "Please enter patient's name: "
+		name = gets.chomp
+		puts "Diagnosis: "
+		diagnosis = gets.chomp
+		puts "Treatment plan:"
+		treatment = gets.chomp
+		puts "Doctor's username:"
+		doctor_username = gets.chomp
+		doctor = @user_database[doctor_username]
+		@current_user.check_in_patient(Patient.new(name), diagnosis, treatment, doctor)
+	end
+
+	def remove_patient(patient_username)
+		@current_user.check_out_patient(@user_database[patient_username])
+	end
+
+	def delete(user)
+		@user_database.delete(user.username)
 	end
 
 	def add(user)
@@ -141,8 +176,8 @@ class Person
 		@name = name
 		@access_level = access_level
 	end
-
 end
+
 
 class Employee < Person
 	attr_reader :job_title, :salary
@@ -161,10 +196,19 @@ class Employee < Person
 end
 
 class Doctor < Employee
-	attr_accessor :patients
+	attr_reader :patients
+
 	def initialize(name, salary)
-		@patients = []
+		@patients = {}
 		super(name, "Doctor", salary)
+	end
+
+	def remove_patient(patient)
+		@patients.delete(patient.id)
+	end
+
+	def add_patient(patient)
+		@patients[patient.id] = patient
 	end
 end
 
@@ -176,6 +220,7 @@ class Janitor < Employee
 end
 
 class Receptionist < Employee
+	attr_accessor :doctor
 	def initialize(name, salary, doctor)
 		super(name, "Receptionist", salary)
 		@doctor = doctor
@@ -189,8 +234,11 @@ class Receptionist < Employee
 		patient.diagnosis = diagnosis
 		patient.treatment = treatment
 		patient.doctor = doctor
-		doctor.patients << patient
-		@hospital.admit_patient(patient)
+		@hospital.check_in_patient(patient)
+	end
+
+	def check_out_patient(patient)
+		@hospital.check_out_patient(patient)
 	end
 end
 
@@ -201,7 +249,7 @@ class Patient < Person
 	end
 
 	def to_s
-		"Doctor: #{doctor.name}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
+		"Doctor: #{doctor.name}, ID: #{id}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
 	end
 end
 
@@ -216,7 +264,7 @@ ezekiel = Janitor.new("Ezekiel", 25_000)
 
 mercy.hire(miranda, phyllis, ezekiel)
 
-cheryl = Patient.new("Cheryl Blossom")
+cheryl = Patient.new("Cheryl")
 phyllis.greet(cheryl.name)
 phyllis.check_in_patient(cheryl, "Broken Leg", "Cast", miranda)
 

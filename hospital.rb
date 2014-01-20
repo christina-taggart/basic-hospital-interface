@@ -1,20 +1,34 @@
+require 'securerandom'
+
 class Hospital
+	attr_reader :auth_system
 	def initialize(name, location)
 		@name = name
 		@location = location
 		@employees = []
 		@patients = []
+		@auth_system = AuthSystem.new
 	end
 
 	def admit_patient(patient)
+		create_username_and_password(patient)
 		@patients << patient
 	end
 
 	def hire(*new_employees)
 		new_employees.each do |employee|
+			create_username_and_password(employee)
 			employee.hospital = self
 			@employees << employee
 		end
+	end
+
+	def create_username_and_password(person)
+		person.username = person.name + SecureRandom.hex(2)
+		person.password = SecureRandom.hex(4)
+		# person.username = "a"
+		# person.password = "a"
+		@auth_system.add(person)
 	end
 
 	def to_s
@@ -25,18 +39,67 @@ class Hospital
 
 end
 
+class AuthSystem
+	def initialize
+		@user_database = {}
+	end
 
-class Employee
+	def start_authentication_system
+		puts "Welcome to #{@name}"
+		puts "-" * 20
+		username, password = login_prompt
+		puts "-" * 20
+		until valid_login?(username, password)
+			"Invalid Login ID. "
+			username, password = login_prompt
+		end
+		user = @user_database[username]
+		puts "Welcome, #{username}. Your access level is: #{user.access_level}"
+	end
+
+	def valid_login?(username, password)
+		user = @user_database[username]
+		return false unless user #guard clause
+
+		user.password == password
+	end
+
+	def login_prompt
+		puts "Please enter your username:"
+		username = gets.chomp
+		puts "Please enter your password:"
+		password = gets.chomp
+		[username, password]
+	end
+
+	def add(person)
+		@user_database[person.username] = person
+	end
+end
+
+
+class Person
+	attr_accessor :name, :username, :password, :access_level
+	def initialize(name, access_level)
+		@name = name
+		@access_level = access_level
+	end
+
+end
+
+class Employee < Person
 	attr_reader :job_title, :salary
 	attr_accessor :hospital
 	def initialize(name, job_title, salary)
-		@name = name
+		super(name, job_title)
 		@job_title = job_title
 		@salary = salary
+		@access_level = @job_title.upcase
 	end
 
 	def to_s
-		"#{@job_title} - #{@name}, salary: #{@salary} \n"
+		"#{@job_title} - #{@name}, salary: #{@salary} \n" +
+		"username: #{@username}, password: #{password}"
 	end
 end
 
@@ -71,15 +134,12 @@ class Receptionist < Employee
 		doctor.patients << patient
 		@hospital.admit_patient(patient)
 	end
-
-
 end
 
-class Patient
-	attr_reader :name
+class Patient < Person
 	attr_accessor :diagnosis, :treatment, :doctor
 	def initialize(name)
-		@name = name
+		super(name, "PATIENT")
 	end
 end
 
@@ -97,9 +157,10 @@ cheryl = Patient.new("Cheryl Blossom")
 phyllis.greet(cheryl.name)
 phyllis.check_in_patient(cheryl, "Broken Leg", "Cast", miranda)
 
-puts mercy
-p miranda.patients
-p cheryl.doctor
+p cheryl
+p miranda
+
+mercy.auth_system.start_authentication_system
 
 
 

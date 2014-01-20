@@ -19,7 +19,7 @@ class Hospital
 
 	def check_in_patient(patient)
 		patient.id = create_id
-		create_username_and_password(patient)
+		@auth_system.create_username_and_password(patient)
 		@patients[patient.id] = patient
 	end
 
@@ -30,20 +30,10 @@ class Hospital
 
 	def hire(*new_employees)
 		new_employees.each do |employee|
-			create_username_and_password(employee)
+			@auth_system.create_username_and_password(employee)
 			employee.hospital = self
 			@employees << employee
 		end
-	end
-
-	def create_username_and_password(person)
-		person.username = person.name + SecureRandom.hex(2)
-		person.password = SecureRandom.hex(4)
-		@auth_system.add(person)
-	end
-
-	def create_admin(employee)
-		employee.access_level = "ADMIN"
 	end
 
 	def to_s
@@ -165,6 +155,16 @@ class AuthSystem
 	def add(user)
 		@user_database[user.username] = user
 	end
+
+	def create_username_and_password(person)
+		person.username = person.name + SecureRandom.hex(2)
+		person.password = SecureRandom.hex(4)
+		add(person)
+	end
+
+	def create_admin(employee)
+		employee.access_level = "ADMIN"
+	end
 end
 
 
@@ -249,7 +249,7 @@ end
 mercy = Hospital.new("Mercy County Hospital", "Princeton Jct, New Jersey")
 miranda = Doctor.new("Miranda", 120_000)
 phyllis = Receptionist.new("Phyllis", 40_000, miranda)
-mercy.create_admin(phyllis)
+mercy.auth_system.create_admin(phyllis)
 ezekiel = Janitor.new("Ezekiel", 25_000)
 
 mercy.hire(miranda, phyllis, ezekiel)

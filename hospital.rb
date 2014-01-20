@@ -31,6 +31,10 @@ class Hospital
 		@auth_system.add(person)
 	end
 
+	def create_admin(employee)
+		employee.access_level = "ADMIN"
+	end
+
 	def to_s
 		"#{@name}, #{@location}, \n" +
 		"Employees: #{@employees.count}\n" +
@@ -55,6 +59,45 @@ class AuthSystem
 		end
 		user = @user_database[username]
 		puts "Welcome, #{username}. Your access level is: #{user.access_level}"
+
+		if user.access_level == "PATIENT"
+			puts user
+		else
+			display_options(user.access_level)
+			process_user_choice(gets.chomp, user)
+		end
+	end
+
+	def process_user_choice(input, user)
+		if choice == "l"
+			list_patients(user)
+		elsif choice == "v"
+			view_records(user)
+		elsif choice == "a"
+			add_record(user)
+		elsif choice == "r"
+			remove_record(user)
+		else
+			puts "Invalid Entry."
+		end
+	end
+
+	def display_options(access_level)
+		valid_access_levels = ["DOCTOR", "RECEPTIONIST", "PATIENT", "ADMIN"]
+		unless valid_access_levels.include?(access_level)
+			puts "Invalid access level."
+			return
+		end
+
+		puts "What would you like to do?"
+		puts "Options: "
+		puts "l - list_patients"
+		puts "v - view_records"
+
+		if access_level == "ADMIN"
+			puts "a - add_record"
+			puts "r - remove_record"
+		end
 	end
 
 	def valid_login?(username, password)
@@ -72,8 +115,22 @@ class AuthSystem
 		[username, password]
 	end
 
-	def add(person)
-		@user_database[person.username] = person
+	def list_patients(user)
+		if user.access_level == "RECEPTIONIST"
+			patients = user.doctor.patients
+		elsif user.access_level == "DOCTOR"
+			patients = user.patients
+		end
+
+		puts patients.map {|patient| patient.name }
+	end
+
+	def view_records(user)
+
+	end
+
+	def add(user)
+		@user_database[user.username] = user
 	end
 end
 
@@ -119,8 +176,9 @@ class Janitor < Employee
 end
 
 class Receptionist < Employee
-	def initialize(name, salary)
+	def initialize(name, salary, doctor)
 		super(name, "Receptionist", salary)
+		@doctor = doctor
 	end
 
 	def greet(name)
@@ -137,9 +195,13 @@ class Receptionist < Employee
 end
 
 class Patient < Person
-	attr_accessor :diagnosis, :treatment, :doctor
+	attr_accessor :diagnosis, :treatment, :doctor, :id
 	def initialize(name)
 		super(name, "PATIENT")
+	end
+
+	def to_s
+		"Doctor: #{doctor.name}, Diagnosis: #{diagnosis}, Treatment: #{treatment}"
 	end
 end
 
@@ -148,7 +210,8 @@ end
 
 mercy = Hospital.new("Mercy County Hospital", "Princeton Jct, New Jersey")
 miranda = Doctor.new("Miranda", 120_000)
-phyllis = Receptionist.new("Phyllis", 40_000)
+phyllis = Receptionist.new("Phyllis", 40_000, miranda)
+mercy.create_admin(phyllis)
 ezekiel = Janitor.new("Ezekiel", 25_000)
 
 mercy.hire(miranda, phyllis, ezekiel)
@@ -157,7 +220,10 @@ cheryl = Patient.new("Cheryl Blossom")
 phyllis.greet(cheryl.name)
 phyllis.check_in_patient(cheryl, "Broken Leg", "Cast", miranda)
 
-p cheryl
+p cheryl.username
+p cheryl.password
+p phyllis.username
+p phyllis.password
 p miranda
 
 mercy.auth_system.start_authentication_system

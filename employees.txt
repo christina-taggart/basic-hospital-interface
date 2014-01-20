@@ -7,9 +7,11 @@ Doctor
 Queen Elizabeth
 OBGYN
 
-Doctor 
+
+Doctor
 Yayoi Kusama
 Pediatrician
+
 
 Patient
 Elvis Presley
@@ -18,6 +20,8 @@ Yoga
 
 Janitor
 Henry VII
+
+
 
 Receptionist
 Clark Kent

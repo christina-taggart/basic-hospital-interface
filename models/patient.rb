@@ -1,10 +1,10 @@
 
 
 class Patient
-	attr_reader :name, :id
-	def initialize(name, id, illness, billing_address)
-		@name = name
-		@id = id
+	attr_reader :user_name
+	def initialize(user_name, password, illness, billing_address)
+		@user_name = user_name
+		@password = password
 		@illness = illness
 		@billing_address = billing_address
 	end

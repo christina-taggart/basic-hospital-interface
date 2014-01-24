@@ -25,3 +25,8 @@ Release 1:
 
 - Patients and Employees should have user names and passwords
 - I need a interface class that allows for input and output between a user and the terminal
+- I need a system administrator to enable migrations to my database
+
+- I need a access level system
+	- each person should know their level of access
+	- access must not be granted to unqualified persons

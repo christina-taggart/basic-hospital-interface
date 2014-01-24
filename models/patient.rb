@@ -1,21 +1,22 @@
+require_relative '../db/config'
 
 
-class Patient
+class Patient < ActiveRecord::Base
 	attr_reader :user_name
-	def initialize(user_name, password, illness, billing_address)
-		@user_name = user_name
-		@password = password
-		@illness = illness
-		@billing_address = billing_address
+	def initialize(info = {}) #, illness, billing_address)
+		@user_name = info[:user_name]
+		@password = info[:password]
+		# @illness = illness
+		# @billing_address = billing_address
 	end
 
-	private
+	# private
 
-	def illness
-		@illness
-	end
+	# def illness
+	# 	@illness
+	# end
 
-	def billing_address
-		@billing_address
-	end
+	# def billing_address
+	# 	@billing_address
+	# end
 end

@@ -1,17 +1,19 @@
 require 'rake'
 require 'rspec/core/rake_task'
-require_relative 'lib/sunlight_legislators_importer'
-require_relative 'lib/tweets_importer'
+require 'faker'
+require 'csv'
+require_relative 'lib/employee_importer'
+require_relative 'lib/patient_importer'
 require_relative 'db/config'
 
 desc "create the database"
 task "db:create" do
-  touch 'db/ar-sunlight-legislators.sqlite3'
+  touch 'db/medical.sqlite3'
 end
 
 desc "drop the database"
 task "db:drop" do
-  rm_f 'db/ar-sunlight-legislators.sqlite3'
+  rm_f 'db/medical.sqlite3'
 end
 
 desc "migrate the database (options: VERSION=x, VERBOSE=false, SCOPE=blog)."
@@ -46,14 +48,14 @@ task "db:create_migration" do
   end
 end
 
-desc "populate the test database with sample data"
-task "db:populate_legislators" do
-  SunlightLegislatorsImporter.import
+desc "populate the patient database with data"
+task "db:populate_patients" do
+  PatientImporter.import
 end
 
-desc "populate the tweet database with data"
-task "db:populate_tweets" do
-  TweetsImporter.import
+desc "populate the employee database with data"
+task "db:populate_employees" do
+  EmployeeImporter.import
 end
 
 desc 'Retrieves the current schema version number'
@@ -61,6 +63,23 @@ task "db:version" do
   puts "Current version: #{ActiveRecord::Migrator.current_version}"
 end
 
+desc "creates fake patients"
+task "db:create_patients" do
+    CSV.open("db/data/patients.csv", "wb") do |csv|
+        100.times do
+          csv << ["#{Faker::Internet.user_name}", "#{Faker::Internet.password}"]
+        end
+    end
+end
+
+desc "creates fake employees"
+task "db:create_employees" do
+    CSV.open("db/data/employees.csv", "wb") do |csv|
+        100.times do
+          csv << ["#{Faker::Internet.user_name}", "#{Faker::Internet.password}"]
+        end
+    end
+end
 desc "Run the specs"
 RSpec::Core::RakeTask.new(:specs)
 

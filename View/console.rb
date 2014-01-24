@@ -1,4 +1,5 @@
 require_relative '../models/hospital'
+require_relative '../models/interface'
 require 'rubygems'
 require 'highline/import'
 

@@ -1,8 +1,10 @@
-require_relative '../app/models/Patient'
+require_relative '../models/patient'
 require 'csv'
+require 'pry'
+require 'pry-nav'
 
 module PatientImporter
-  def self.import(filename=File.dirname(__FILE__) + "/../db/data/Patients.csv")
+  def self.import(filename=File.dirname(__FILE__) + "/../db/data/patients.csv")
     field_names = nil
     Patient.transaction do
       File.open(filename).each do |line|
@@ -11,7 +13,7 @@ module PatientImporter
           field_names = data
         else
           attribute_hash = Hash[field_names.zip(data)]
-          Patient = Patient.create!(attribute_hash)
+          patient = Patient.create!(attribute_hash)
         end
       end
     end
